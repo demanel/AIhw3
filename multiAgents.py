@@ -14,7 +14,7 @@
 
 from util import manhattanDistance
 from game import Directions
-import random, util
+import random, util, itertools
 
 from game import Agent
 
@@ -103,7 +103,30 @@ class MinimaxAgent(MultiAgentSearchAgent):
       Your minimax agent (question 2)
     """
 
-    def getAction(self, gameState):
+    def getAction(self, gameState, depth=0):
+        legalMoves = gameState.getLegalActions(0)
+        nextStates = [gameState.generateSuccessor(0, move) for move in legalMoves]
+        scores = [self.evaluationFunction(state) for state in nextStates]
+        
+        print(legalMoves)
+        
+        bestScore = max(scores)
+        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+        chosenIndex = random.choice(bestIndices) # Pick randomly among the best
+        chosenMove = legalMoves[chosenIndex]
+        
+        depth += 1
+        if depth == self.depth:
+            return chosenMove
+        else:
+            return self.getAction(nextStates[chosenIndex], depth)
+        
+        # on the way back up
+        #     return max(score)
+        # on the way down
+        #     we don't care about ghosts' choices right now, so for each
+        #     legal move, expand that and see what happens
+            
         """
           Returns the minimax action from the current gameState using self.depth
           and self.evaluationFunction.
