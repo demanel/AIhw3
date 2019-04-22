@@ -162,34 +162,74 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
 
         agents = gameState.getNumAgents()
+        alpha = float("-inf")
+        beta = float("inf")
+        val = float("-inf")
 
         legalActions = gameState.getLegalActions(0)
         nextStates = {move: gameState.generateSuccessor(0, move) for move in legalActions}
-        nextScores = {move: self.getScoreForDecisionNode(nextStates[move], agents) for move in legalActions}
+        nextScores = {}
+        for move in legalActions:
+            res = self.minValue(nextStates[move], alpha, beta)
+            val = max(val, res)
+            alpha = max(alpha, val)
+            nextScores[move] = res
 
-        bestScore = max(nextScores.values())
-        bestMoves = [index for index in nextScores.keys() if nextScores[index] == bestScore]
+        bestMoves = [index for index in nextScores.keys() if nextScores[index] == alpha]
         chosenMove = random.choice(bestMoves)
         return chosenMove
 
-        # util.raiseNotDefined()
+    def minValue(self, gameState, alpha, beta, round = 1):
+        val = float("inf")
 
-    def getScoreForDecisionNode(self, gameState, agents = 1, round = 1):
+        agents = gameState.getNumAgents()
         agent = round % agents
         depth = round // agents
 
-        if agents * self.depth == round:
-            # We are at the terminal nodes, so we need to compute actual scores here.
-            return self.evaluationFunction(gameState)
-        else:
-            legalActions = gameState.getLegalActions(agent)
-            nextStates = {move: gameState.generateSuccessor(agent, move) for move in legalActions}
-            scores = {move: self.getScoreForDecisionNode(nextStates[move], agents, round + 1) for move in legalActions}
+        if depth == self.depth or len(gameState.getLegalActions(agent)) == 0:
+            val = self.evaluationFunction(gameState)
+            return val
 
-            if len(scores) == 0:
-                return self.evaluationFunction(gameState)
-            bestScore = max(scores.values()) if agent == 0 else min(scores.values())
-            return bestScore
+        nextRound = round + 1
+        nextAgent = nextRound % agents
+
+        legalActions = gameState.getLegalActions(agent)
+        for action in legalActions:
+            child = gameState.generateSuccessor(agent, action)
+            childVal = self.maxValue(child, alpha, beta, nextRound) if nextAgent == 0 else self.minValue(child, alpha, beta, nextRound)
+            val = min(val, childVal)
+
+            if val < alpha:
+                return val
+            beta = min(beta, val)
+
+        return val
+
+    def maxValue(self, gameState, alpha, beta, round = 1):
+        val = float("-inf")
+
+        agents = gameState.getNumAgents()
+        agent = round % agents
+        depth = round // agents
+
+        if depth == self.depth or len(gameState.getLegalActions(agent)) == 0:
+            val = self.evaluationFunction(gameState)
+            return val
+
+        nextRound = round + 1
+        nextAgent = nextRound % agents
+
+        legalActions = gameState.getLegalActions(agent)
+        for action in legalActions:
+            child = gameState.generateSuccessor(agent, action)
+            childVal = self.maxValue(child, alpha, beta, nextRound) if nextAgent == 0 else self.minValue(child, alpha, beta, nextRound)
+            val = max(val, childVal)
+
+            if val > beta:
+                return val
+            alpha = max(alpha, val)
+
+        return val
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
