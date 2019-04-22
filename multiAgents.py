@@ -160,7 +160,36 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        agents = gameState.getNumAgents()
+
+        legalActions = gameState.getLegalActions(0)
+        nextStates = {move: gameState.generateSuccessor(0, move) for move in legalActions}
+        nextScores = {move: self.getScoreForDecisionNode(nextStates[move], agents) for move in legalActions}
+
+        bestScore = max(nextScores.values())
+        bestMoves = [index for index in nextScores.keys() if nextScores[index] == bestScore]
+        chosenMove = random.choice(bestMoves)
+        return chosenMove
+
+        # util.raiseNotDefined()
+        
+    def getScoreForDecisionNode(self, gameState, agents = 1, round = 1):
+        agent = round % agents
+        depth = round // agents
+
+        if agents * self.depth == round:
+            # We are at the terminal nodes, so we need to compute actual scores here.
+            return self.evaluationFunction(gameState)
+        else:
+            legalActions = gameState.getLegalActions(agent)
+            nextStates = {move: gameState.generateSuccessor(agent, move) for move in legalActions}
+            scores = {move: self.getScoreForDecisionNode(nextStates[move], agents, round + 1) for move in legalActions}
+
+            if len(scores) == 0:
+                return self.evaluationFunction(gameState)
+            bestScore = max(scores.values()) if agent == 0 else min(scores.values())
+            return bestScore
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
