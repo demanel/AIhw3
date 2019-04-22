@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -103,30 +103,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
       Your minimax agent (question 2)
     """
 
-    def getAction(self, gameState, depth=0):
-        legalMoves = gameState.getLegalActions(0)
-        nextStates = [gameState.generateSuccessor(0, move) for move in legalMoves]
-        scores = [self.evaluationFunction(state) for state in nextStates]
-        
-        print(legalMoves)
-        
-        bestScore = max(scores)
-        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
-        chosenIndex = random.choice(bestIndices) # Pick randomly among the best
-        chosenMove = legalMoves[chosenIndex]
-        
-        depth += 1
-        if depth == self.depth:
-            return chosenMove
-        else:
-            return self.getAction(nextStates[chosenIndex], depth)
-        
-        # on the way back up
-        #     return max(score)
-        # on the way down
-        #     we don't care about ghosts' choices right now, so for each
-        #     legal move, expand that and see what happens
-            
+    def getAction(self, gameState):
         """
           Returns the minimax action from the current gameState using self.depth
           and self.evaluationFunction.
@@ -144,7 +121,34 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        agents = gameState.getNumAgents()
+
+        legalActions = gameState.getLegalActions(0)
+        nextStates = {move: gameState.generateSuccessor(0, move) for move in legalActions}
+        nextScores = {move: self.getScoreForDecisionNode(nextStates[move], agents) for move in legalActions}
+
+        bestScore = max(nextScores.values())
+        bestMoves = [index for index in nextScores.keys() if nextScores[index] == bestScore]
+        chosenMove = random.choice(bestMoves)
+        return chosenMove
+        # util.raiseNotDefined()
+
+    def getScoreForDecisionNode(self, gameState, agents = 1, round = 1):
+        agent = round % agents
+        depth = round // agents
+
+        if agents * self.depth == round:
+            # We are at the terminal nodes, so we need to compute actual scores here.
+            return self.evaluationFunction(gameState)
+        else:
+            legalActions = gameState.getLegalActions(agent)
+            nextStates = {move: gameState.generateSuccessor(agent, move) for move in legalActions}
+            scores = {move: self.getScoreForDecisionNode(nextStates[move], agents, round + 1) for move in legalActions}
+
+            if len(scores) == 0:
+                return self.evaluationFunction(gameState)
+            bestScore = max(scores.values()) if agent == 0 else min(scores.values())
+            return bestScore
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -185,4 +189,3 @@ def betterEvaluationFunction(currentGameState):
 
 # Abbreviation
 better = betterEvaluationFunction
-
